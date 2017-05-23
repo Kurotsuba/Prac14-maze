@@ -13,10 +13,18 @@
 
 using namespace std;
 
-int getRoute(vector<string> & m, int x, int y, int l, int w);
+bool getRoute(const vector<string> & m, vector<vector<string> >& re, int x, int y, int l, int w);
+struct Route{
+	int idx;
+	int length;
+	Route(int index){
+		idx = index;
+		length = 0;
+	}
+};
 
 int main(){
-	ifstream ifs("mg1.txt");
+	ifstream ifs("mg4.txt");
 	stringstream ss;
 	string temp;
 
@@ -46,54 +54,95 @@ int main(){
 
 	ifs.close();
 
-	cout <<getRoute(maze, 0, 0, l, w) << endl;
+
+	vector<vector<string> > results;
+
+	getRoute(maze,results,0,0,l,w);
+
+	vector<Route> rouVec;
+
+	for(int i=0; i<results.size(); i++){
+		rouVec.push_back(Route(i));
+	}
+
+	for(int i=0; i<results.size(); i++){
+		for(int j=0; j<results[i].size(); j++){
+			if(results[i][j] == "2"){
+				rouVec[i].length++;
+			}
+		}
+	}
+
+	int maxLen = rouVec[0].length;
+	int resultIdx = 0;
+	for(int i=1; i<rouVec.size(); i++){
+		if(rouVec[i].length < maxLen){
+			resultIdx = i;
+		}
+	}
+
+	vector<string> shortRoute = results[resultIdx];
+
 
 	for(int i=0; i<l; i++){
 		for(int j=0; j<w; j++){
-			cout << maze[i*w + j];
+			cout << shortRoute[i*w + j];
 		}
 		cout << endl;
 	}
 
+
+
 	return 0;
 }
 
-int getRoute(vector<string> & m, int x, int y, int l, int w){
+bool getRoute(const vector<string> & m, vector<vector<string> >& re, int x, int y, int l, int w){
 	int idx = x * w + y;
+	vector<string> run = m;
+
+	bool flagLeft, flagRight, flagUp, flagDown;
 	if(x == l-1 && y == w-1){
-		m[idx] = "2";
-		return 1;
+		run[idx] = "2";
+		re.push_back(run);
+		return true;
 	}
 	if(x > l-1 || y > w-1 || x < 0 || y < 0){
-		return -1;
+		return false;
 	}
 	if(m[idx] != "0"){
-		return -1;
+		return false;
 	}
 
-	m[idx] = "2";
+	run[idx] = "2";
 
-	int left = getRoute(m, x-1, y, l, w);
-
-	int right = getRoute(m, x+1, y, l, w);
-
-	int up = getRoute(m, x, y-1, l, w);
-
-	int down = getRoute(m, x, y+1, l, w);
-
-	if(left == -1 && right == -1 && up == -1 && down == -1){
-		m[idx] = "0";
-		return -1;
+	if(getRoute(run, re, x-1, y, l, w)){
+		flagLeft = true;
+	}else{
+		flagLeft = false;
 	}
 
-	if(left <= right && left <= up && left <= down){
-		return left + 1;
-	}else if(right <= left && right <= up && right <= down){
-		return right + 1;
-	}else if(up <= left && up <= right && up <= down){
-		return up + 1;
-	}else if(down <= left && down <= right && down <= up){
-		return down + 1;
+	if(getRoute(run, re, x+1, y, l, w)){
+		flagRight = true;
+	}else{
+		flagRight = false;
+	}
+
+	if(getRoute(run, re, x, y-1, l, w)){
+		flagUp = true;
+	}else{
+		flagUp = false;
+	}
+
+	if(getRoute(run, re, x, y+1, l, w)){
+		flagDown = true;
+	}else{
+		flagDown = false;
+	}
+
+	if(flagLeft || flagRight || flagUp || flagDown){
+		return true;
+	}else{
+		return false;
 	}
 
 }
